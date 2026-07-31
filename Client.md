@@ -1,6 +1,7 @@
 * @ Chiang Mai
  ## Locations
     3221 - Mississauge
+        🟨IT guy Ryan 416-561-0142
     3220 - Yorkmills
     3219 - Junction
     3218 - Liberty
