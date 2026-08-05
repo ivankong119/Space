@@ -7,3 +7,9 @@
  Service Based - 1392_test
 <https://gosnappy.atlassian.net/browse/DEV-9938
 
+## Map Direction
+Andriod - Google and Waze
+iOS - Apple, Google and Waze
+
+## KDS Report
+https://gosnappy.atlassian.net/browse/DEV-10119
