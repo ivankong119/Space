@@ -12,10 +12,11 @@
  KDS seat number ✅ **DEV-10487  Aug 19**
  Permission for the change guest count on POS **BUS-2552** 
  Displayed guest count on the transcation order detail **BUS-2553**
- Aervice charge flag based on PartySize ✅ **DEV-9985, 9986, 10301**
+ Service charge flag based on PartySize ✅ **DEV-9985, 9986, 10301**
  KDS filter by order type on UI device. **BUS-2554**
  ~~Support Customize discount on item level POS **DEV-9994**~~
  Group Gift card page
+ voided item report BUS-2668
 
  
 * ! Complaint Reason
