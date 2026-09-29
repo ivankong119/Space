@@ -8,9 +8,10 @@
     2929 - Parklawn
     4195 - Danforth
 
-Andriod account  22
+Andriod account 
 Chiangmai.pos@gmail.com  
 Chiangmai888  
+ 
 * * Request
  KDS seat number ✅ **DEV-10487  Aug 19**  
  Permission for the change guest count on POS **BUS-2552**   
