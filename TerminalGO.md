@@ -1,7 +1,43 @@
-## floor plan  
-    Table action
-        Transfer Table
-            Able to transfer table to another empty or occupied table with no error
-## Order page
+# Terminal GO
+## Log in page  
+|Action| Expected|
+|---|---|
+## Floor Action <br><sub> Press and hold on the active table</sub>
+|Action| Expected|
+|---|---|
+|Transfer Table | Requires pos.table.write.transfer permission (or a manager PIN override). Opens the floor plan with a "tap to transfer table" hint; picking a different table calls POST api/table/transfer with source/target table numbers, moving all the table's orders and seats to the new table. Failure shows a "Failed to transfer table" error dialog. with no error | 
+|Pay | Pulls the table's orders, opens the first available seat, then runs pre-checkout validation (e.g. a required gratuity — it prompts to resolve that before continuing). If validation passes it navigates to the Pay page in DINE_IN mode. No special permission.
+|Print Bill| Pulls the table's orders and filters to seats with purchasable items. No printable orders → "no printable orders" snack. Multiple orders → a dialog to pick which bills to print. Exactly one → prints that receipt directly. |
+|Table Owner|Opens the ownership (staff picker) dialog for the table, then calls POST api/table/{tableNo}/set_ownership to reassign the server/owner for the whole table.|
+|Extend time|Not a button in the dialog; it's the table expiry flow. When a table's time limit passes (diningTableTimeLimitInMinutes, default 480 min — the tile also turns red on the floor plan), opening its menu shows a "Table expired" dialog offering to extend for another N minutes. Confirming calls POST api/table/{tableNo}/extend with a new lock time = now + N minutes.|
+|Pending Payment|Shown when the enablePendingPayment control setting is on. From the table dialog: after a confirmation, it sends every seat order on the table to pending via POST api/v2/order/pend_payment. From the cart action bar (DINE_IN + table management only): same confirmation, but only the current order is pended. The order stays open as unpaid so the table can be reused and settled later. The | T
+|Print order|Visible when the store's print rules include ORDER receipt type. Calls POST api/table/{tableNo}/print_order_receipt to print the order receipt (production/kitchen copy) for the whole table.|
+|Clear Table|Requires pos.table.write.void permission (or PIN override). After a red "Clear table X?" confirmation, calls DELETE api/table/{tableNo}/void, which voids all orders on the table and frees it back to unserved status.|
+|---|---|
 
-ddd
+┌─────────────────┬────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│     Action      │     Result     │                                                                            What happened                                                                            │
+├─────────────────┼────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Pay             │ ⛔ Blocked     │ Message: "Pay — not in this build"                                                                                                                                  │
+├─────────────────┼────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Print Bill      │ ⛔ Blocked     │ Message: "Print Bill — not in this build"                                                                                                                           │
+├─────────────────┼────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Table Owner     │ ✅ Pass        │ Changed the owner from KK_OWNER SUN to Kintaro T. On reopening, Kintaro T showed "Has this table". I then set it back to KK_OWNER SUN. No success message is shown. │
+├─────────────────┼────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Extend Time     │ ❌ Needs check │ Message: "can not extend a table(tableNo:3)". It shows an internal table number instead of "B14", and doesn't say why the table can't be extended.                  │
+├─────────────────┼────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Pending Payment │ ⛔ Blocked     │ Message: "Pending Payment — not in this build"                                                                                                                      │
+├─────────────────┼────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Print Order     │ ⛔ Blocked     │ Message: "Print Order — not in this build"                                                                                                                          │
+├─────────────────┼────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
+│ Clear Table     │ ✅ Pass        │ It asks "Are you sure you want to clear table B14?" Cancel leaves the order untouched. "Yes, clear" set B14 to Open · 2 seats, with no success message.             │
+## Order Action<br><sub>Located on the order page, top right corner</sub>
+
+|Action| Expected|
+|---|---|
+|Order Details| `openOrderDetails` → `AssignOwnership dialog` <br>• Opens an order info dialog showing Created At date/time, Current Server, party size (dine-in), and Orders count (when opened from a table)<br>• Doubles as server/ownership assignment: with Server Management enabled the title becomes "Select Server" and lists active users (current owner hidden)<br>• Selecting a server queues SET_OWNER; in DINE_IN mode it also reassigns the whole table via assignOwnershipTable and pushes SET_OWNER to every other seat order on that table<br>• Extras: Tax Exemption toggle (if enabled in settings) and Party Size +/- controls (writes via updatePartySize, numpad capped at max party size)<br>• If the new server lacks menu access, the menu screen auto-closes
+|Notes| `jumpToOrderNotes` → `OrderNotes dialog`<br>• Two note fields per order: Kitchen Memo (SET_KITCHEN_NOTES) and Order Memo (SET_ORDER_NOTES), both saved to the cart and queued to the server on Save<br>• Supports store-configured predefined notes via "Suggested Notes" dropdowns — tapping appends the suggestion to the field<br>• Fields are pre-filled with existing notes when the dialog opens
+|Service Fees| `openServiceFeesDialog` → `ServiceFeesDialog`<br>• Lists configured service charges (gratuity-flagged fees excluded — those belong to Gratuity); multi-select, existing fees pre-selected<br>• Supports a Custom fee: Fixed amount or Percentage, with taxable toggle per serviceFeeTaxableSelectionEnabled setting<br>• On confirm it diffs old vs. new selection and queues FEE_ADD / FEE_REMOVE per fee; Cancel = no change, empty list = remove all fees<br>• Button is disabled when the cart is locked (isDisabled)
+|Gratuity|`openGratuityDialog` → `GratuityDialog`<br>• Button is hidden entirely when the store has no gratuity configured for that order type/channel (so staff never hit a dead button); even so, options are re-fetched from the backend when opened<br>• If nothing is configured for the order type → "Feature not set up" dialog<br>• Options render as tiles governed by the store rule: min > 0 makes it Required (Skip hidden, confirm disabled until min is met), max 1 makes selection a swap<br>• Distinguishes cancel/skip (no change) from an intentionally empty selection; applies diffs as FEE_ADD/FEE_REMOVE and waits for server sync before checkout validation runs<br>• Gratuity sits directly under Service Fees in the rail for backward compatibility (it used to live inside Service Fees)
+|Open Item| `openOpenItem`→ `OpenItemView dialog`<br>• Permission-gated: requires pos.order.write.openItem (or manager PIN override)<br>• Form: Item Name (required, validated), Quantity (numpad, min 1), Price (numpad), Taxable and Discountable checkboxes<br>• Submit builds an OPEN_ITEM line item (price → cents, assigned to the active seat / first open seat in a split) and queues OPEN_ITEM to the server<br>• Button disabled when the cart is locked
+|Schedule| `scheduleOrder` → `ScheduleOrderDialog`<br>• Two datetimes per order: Schedule Time (customer-facing, bounded by customer min/max rules) and Release Time (kitchen release, bounded by now → max release window)<br>• Date picker + time picker per field, plus Clear Schedule (removes scheduling)[12:34 PM]• Confirm writes scheduledTime/releaseTime to the cart and queues SET_RELEASE_TIME; Cancel leaves the order untouched
