@@ -2,6 +2,8 @@
 ## Log in page  
 |Action| Expected|
 |---|---|
+|4 digits|Expected to log in|
+|6 digits|Expected to log in|
 ## Floor Action <br><sub> Press and hold on the active table</sub>
 |Action| Expected|
 |---|---|
@@ -10,27 +12,11 @@
 |Print Bill| Pulls the table's orders and filters to seats with purchasable items. No printable orders → "no printable orders" snack. Multiple orders → a dialog to pick which bills to print. Exactly one → prints that receipt directly. |
 |Table Owner|Opens the ownership (staff picker) dialog for the table, then calls POST api/table/{tableNo}/set_ownership to reassign the server/owner for the whole table.|
 |Extend time|Not a button in the dialog; it's the table expiry flow. When a table's time limit passes (diningTableTimeLimitInMinutes, default 480 min — the tile also turns red on the floor plan), opening its menu shows a "Table expired" dialog offering to extend for another N minutes. Confirming calls POST api/table/{tableNo}/extend with a new lock time = now + N minutes.|
-|Pending Payment|Shown when the enablePendingPayment control setting is on. From the table dialog: after a confirmation, it sends every seat order on the table to pending via POST api/v2/order/pend_payment. From the cart action bar (DINE_IN + table management only): same confirmation, but only the current order is pended. The order stays open as unpaid so the table can be reused and settled later. The | T
+|Pending Payment|Shown when the enablePendingPayment control setting is on. From the table dialog: after a confirmation, it sends every seat order on the table to pending via POST api/v2/order/pend_payment. From the cart action bar (DINE_IN + table management only): same confirmation, but only the current order is pended. The order stays open as unpaid so the table can be reused and settled later. <br> The order will be pending off the Dinning table to the active order.</br> 
 |Print order|Visible when the store's print rules include ORDER receipt type. Calls POST api/table/{tableNo}/print_order_receipt to print the order receipt (production/kitchen copy) for the whole table.|
 |Clear Table|Requires pos.table.write.void permission (or PIN override). After a red "Clear table X?" confirmation, calls DELETE api/table/{tableNo}/void, which voids all orders on the table and frees it back to unserved status.|
 |---|---|
 
-┌─────────────────┬────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│     Action      │     Result     │                                                                            What happened                                                                            │
-├─────────────────┼────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ Pay             │ ⛔ Blocked     │ Message: "Pay — not in this build"                                                                                                                                  │
-├─────────────────┼────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ Print Bill      │ ⛔ Blocked     │ Message: "Print Bill — not in this build"                                                                                                                           │
-├─────────────────┼────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ Table Owner     │ ✅ Pass        │ Changed the owner from KK_OWNER SUN to Kintaro T. On reopening, Kintaro T showed "Has this table". I then set it back to KK_OWNER SUN. No success message is shown. │
-├─────────────────┼────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ Extend Time     │ ❌ Needs check │ Message: "can not extend a table(tableNo:3)". It shows an internal table number instead of "B14", and doesn't say why the table can't be extended.                  │
-├─────────────────┼────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ Pending Payment │ ⛔ Blocked     │ Message: "Pending Payment — not in this build"                                                                                                                      │
-├─────────────────┼────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ Print Order     │ ⛔ Blocked     │ Message: "Print Order — not in this build"                                                                                                                          │
-├─────────────────┼────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ Clear Table     │ ✅ Pass        │ It asks "Are you sure you want to clear table B14?" Cancel leaves the order untouched. "Yes, clear" set B14 to Open · 2 seats, with no success message.             │
 ## Order Action<br><sub>Located on the order page, top right corner</sub>
 
 |Action| Expected|
@@ -40,4 +26,12 @@
 |Service Fees| `openServiceFeesDialog` → `ServiceFeesDialog`<br>• Lists configured service charges (gratuity-flagged fees excluded — those belong to Gratuity); multi-select, existing fees pre-selected<br>• Supports a Custom fee: Fixed amount or Percentage, with taxable toggle per serviceFeeTaxableSelectionEnabled setting<br>• On confirm it diffs old vs. new selection and queues FEE_ADD / FEE_REMOVE per fee; Cancel = no change, empty list = remove all fees<br>• Button is disabled when the cart is locked (isDisabled)
 |Gratuity|`openGratuityDialog` → `GratuityDialog`<br>• Button is hidden entirely when the store has no gratuity configured for that order type/channel (so staff never hit a dead button); even so, options are re-fetched from the backend when opened<br>• If nothing is configured for the order type → "Feature not set up" dialog<br>• Options render as tiles governed by the store rule: min > 0 makes it Required (Skip hidden, confirm disabled until min is met), max 1 makes selection a swap<br>• Distinguishes cancel/skip (no change) from an intentionally empty selection; applies diffs as FEE_ADD/FEE_REMOVE and waits for server sync before checkout validation runs<br>• Gratuity sits directly under Service Fees in the rail for backward compatibility (it used to live inside Service Fees)
 |Open Item| `openOpenItem`→ `OpenItemView dialog`<br>• Permission-gated: requires pos.order.write.openItem (or manager PIN override)<br>• Form: Item Name (required, validated), Quantity (numpad, min 1), Price (numpad), Taxable and Discountable checkboxes<br>• Submit builds an OPEN_ITEM line item (price → cents, assigned to the active seat / first open seat in a split) and queues OPEN_ITEM to the server<br>• Button disabled when the cart is locked
-|Schedule| `scheduleOrder` → `ScheduleOrderDialog`<br>• Two datetimes per order: Schedule Time (customer-facing, bounded by customer min/max rules) and Release Time (kitchen release, bounded by now → max release window)<br>• Date picker + time picker per field, plus Clear Schedule (removes scheduling)[12:34 PM]• Confirm writes scheduledTime/releaseTime to the cart and queues SET_RELEASE_TIME; Cancel leaves the order untouched
+|Schedule| `scheduleOrder` → `ScheduleOrderDialog`<br>• Two datetimes per order: Schedule Time (customer-facing, bounded by customer min/max rules) and Release Time (kitchen release, bounded by now → max release window)<br>• Date picker + time picker per field, plus Clear Schedule (removes scheduling)[12:34 PM]• Confirm writes scheduledTime/releaseTime to the cart and queues SET_RELEASE_TIME; Cancel leaves the order untouched 
+
+## Item Action<br><sub>Press and Hold on the item in the shopping cart</sub>
+|Action| Expected|
+|----|----|
+|Split Item| •What it does: Opens the "Split with another seat" seat-picker (multi-select) and distributes the item's quantity across other seats/bills via the `splitItemWithSeat` backend API call. This is the seat/check-splitting flow. Once an item has a split partition, the same button becomes `Revert Split`, which calls the revert API to pull the item back.<br>•Enabled when: dine-in mode with seats active (or seat management in fast-service), not in bill mode.</br>|
+|Separate|• What it does: Breaks a single line item with qty > 1 into multiple qty-1 line items on the same seat/bill. It's purely a local cart manipulation — no dialog, no API call. A qty-3 burger becomes 3 independent burger lines you can then act on individually (complaint, price change, free, etc.).<br>• Enabled when: item is not a deposit/negative, not already a split item, quantity > 1, and not in bill mode.</br>|
+
+TL;DR: Separate = un-bundle quantity into separate lines on the same check (local). Split = move/distribute the item across different seats or bills (server call, reversible via Revert Split).

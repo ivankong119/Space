@@ -147,6 +147,9 @@ Resvation Policy
   </a>
   to ensure proper seating arrangements and reservation confirmation.
  </p>
+  <p style="margin:0 0 24px; font-size:14px; line-height:1.4; text-align:left;">
+  For all large groups, we can split the bill a maximum of four ways
+  </p>
 
   <h2 style="margin:28px 0 18px; font-size:24px; font-weight:700; text-transform:uppercase; text-align:left;">
   Guest Conduct
